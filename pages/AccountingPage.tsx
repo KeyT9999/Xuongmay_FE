@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Style, StyleStatus } from '../types';
 import { STATUS_UI } from '../constants';
 import { 
@@ -9,8 +9,12 @@ import {
   FileSearch,
   MessageSquare,
   TrendingUp,
-  Receipt
+  Receipt,
+  Calculator,
+  Download
 } from 'lucide-react';
+import CostEstimationModal from '../src/components/CostEstimationModal';
+import { styleService } from '../src/services/style.service';
 
 interface AccountingPageProps {
   styles: Style[];
@@ -18,13 +22,31 @@ interface AccountingPageProps {
 }
 
 const AccountingPage: React.FC<AccountingPageProps> = ({ styles, onUpdateStyles }) => {
+  const [showCostEstimationModal, setShowCostEstimationModal] = useState(false);
+  const [selectedStyleForEstimation, setSelectedStyleForEstimation] = useState<Style | null>(null);
+  const [isExporting, setIsExporting] = useState(false);
+  
   const pendingStyles = styles.filter(s => s.status === StyleStatus.SENT_TO_ACCOUNTING);
+  const estimatedStyles = styles.filter(s => s.status === StyleStatus.COST_ESTIMATED);
 
-  const handleApprove = (id: string) => {
-    onUpdateStyles(prev => prev.map(s => 
-      s.id === id ? { ...s, status: StyleStatus.COST_APPROVED } : s
-    ));
-    alert('Đã duyệt giá. Mẫu thiết kế hiện đã sẵn sàng để lập kế hoạch sản xuất.');
+  const handleOpenCostEstimation = (style: Style) => {
+    setSelectedStyleForEstimation(style);
+    setShowCostEstimationModal(true);
+  };
+
+  const handleCloseCostEstimation = () => {
+    setShowCostEstimationModal(false);
+    setSelectedStyleForEstimation(null);
+  };
+
+  const handleCostEstimationSuccess = async () => {
+    // Reload styles
+    try {
+      const updatedStyles = await styleService.getStyles();
+      onUpdateStyles(updatedStyles);
+    } catch (error) {
+      console.error('Failed to reload styles:', error);
+    }
   };
 
   const handleReject = (id: string) => {
@@ -34,16 +56,46 @@ const AccountingPage: React.FC<AccountingPageProps> = ({ styles, onUpdateStyles 
     alert('Đã từ chối và gửi phản hồi lại cho bộ phận Kỹ thuật.');
   };
 
+  const handleExportExcel = async () => {
+    const exportAll = confirm('Bạn muốn export tất cả Styles?\n\nOK = Export tất cả\nCancel = Export chỉ danh sách cần thẩm định');
+    
+    setIsExporting(true);
+    try {
+      await styleService.exportStylesToExcel({
+        exportAll: exportAll,
+        status: exportAll ? undefined : [StyleStatus.SENT_TO_ACCOUNTING, StyleStatus.COST_ESTIMATED],
+        includeBOM: true,
+        includeRouting: true,
+        includeCostEstimation: true,
+      });
+      
+      alert('Đã xuất file Excel thành công!');
+    } catch (error: any) {
+      console.error('Export error:', error);
+      alert('Có lỗi xảy ra khi xuất Excel: ' + (error.response?.data?.message || error.message));
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   return (
     <div className="space-y-8 animate-in fade-in duration-500 pb-10">
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-3xl font-black text-[#212B36] tracking-tight">Thẩm Định Tài Chính</h2>
-          <p className="text-slate-500 text-sm font-medium mt-1">Xem xét các bản đề xuất từ Kỹ thuật và phê duyệt ngân sách sản xuất.</p>
+          <p className="text-slate-500 text-sm font-medium mt-1">Xem xét các bản đề xuất từ Kỹ thuật và dự trù chi phí sản xuất.</p>
         </div>
+        <button 
+          onClick={handleExportExcel}
+          disabled={isExporting}
+          className="bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 px-5 py-3 rounded-2xl font-bold text-sm flex items-center space-x-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <Download size={18} />
+          <span>Xuất Excel</span>
+        </button>
       </div>
 
-      {pendingStyles.length === 0 ? (
+      {pendingStyles.length === 0 && estimatedStyles.length === 0 ? (
         <div className="bg-white border-2 border-dashed border-slate-100 rounded-[3rem] p-32 text-center shadow-sm">
           <CheckCircle2 size={56} className="text-emerald-200 mx-auto mb-6" />
           <h3 className="text-xl font-black text-slate-800 uppercase tracking-widest">Hộp thư trống</h3>
@@ -79,11 +131,11 @@ const AccountingPage: React.FC<AccountingPageProps> = ({ styles, onUpdateStyles 
 
               <div className="grid grid-cols-2 gap-4">
                 <button 
-                  onClick={() => handleApprove(style.id)}
-                  className="bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs uppercase tracking-widest py-4 rounded-2xl flex items-center justify-center space-x-2 transition-all shadow-xl shadow-emerald-600/20 active:scale-95"
+                  onClick={() => handleOpenCostEstimation(style)}
+                  className="bg-blue-600 hover:bg-blue-700 text-white font-black text-xs uppercase tracking-widest py-4 rounded-2xl flex items-center justify-center space-x-2 transition-all shadow-xl shadow-blue-600/20 active:scale-95"
                 >
-                  <CheckCircle2 size={16} />
-                  <span>Phê Duyệt</span>
+                  <Calculator size={16} />
+                  <span>Dự Trù Chi Phí</span>
                 </button>
                 <button 
                   onClick={() => handleReject(style.id)}
@@ -100,6 +152,45 @@ const AccountingPage: React.FC<AccountingPageProps> = ({ styles, onUpdateStyles 
               </button>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* Estimated Styles Section */}
+      {estimatedStyles.length > 0 && (
+        <div className="bg-white rounded-[2.5rem] border border-slate-100 p-8 shadow-sm">
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="font-black text-[#212B36] text-lg flex items-center space-x-3">
+              <Calculator size={24} className="text-amber-600" />
+              <span>Đã Dự Trù - Chờ Kỹ Thuật Xem Xét</span>
+            </h3>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+            {estimatedStyles.map(style => (
+              <div key={style.id} className="bg-amber-50/50 rounded-2xl border border-amber-100 p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <span className="text-[10px] font-black uppercase tracking-[0.2em] text-amber-600 bg-amber-100 px-3 py-1 rounded-full">
+                    Đã Dự Trù
+                  </span>
+                  <span className="text-xs text-slate-400 font-mono font-bold">{style.code}</span>
+                </div>
+                <h4 className="font-black text-[#212B36] text-lg mb-2">{style.name}</h4>
+                <div className="mt-4 pt-4 border-t border-amber-200">
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-xs text-slate-600">Giá dự trù:</span>
+                    <span className="text-lg font-black text-amber-600">
+                      {style.accountingFinalPrice?.toLocaleString() || style.proposedPrice?.toLocaleString()} đ
+                    </span>
+                  </div>
+                  <button
+                    onClick={() => handleOpenCostEstimation(style)}
+                    className="w-full mt-3 py-2 text-xs font-bold text-amber-700 hover:bg-amber-100 rounded-xl transition-colors"
+                  >
+                    Xem / Chỉnh Sửa
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       )}
 
@@ -135,6 +226,16 @@ const AccountingPage: React.FC<AccountingPageProps> = ({ styles, onUpdateStyles 
           ))}
         </div>
       </div>
+
+      {/* Cost Estimation Modal */}
+      {selectedStyleForEstimation && (
+        <CostEstimationModal
+          isOpen={showCostEstimationModal}
+          onClose={handleCloseCostEstimation}
+          style={selectedStyleForEstimation}
+          onSuccess={handleCostEstimationSuccess}
+        />
+      )}
     </div>
   );
 };

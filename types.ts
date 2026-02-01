@@ -12,6 +12,7 @@ export enum UserRole {
 export enum StyleStatus {
   DRAFT = 'DRAFT',
   SENT_TO_ACCOUNTING = 'SENT_TO_ACCOUNTING',
+  COST_ESTIMATED = 'COST_ESTIMATED',
   COST_APPROVED = 'COST_APPROVED',
   READY_FOR_PLANNING = 'READY_FOR_PLANNING',
   IN_PRODUCTION = 'IN_PRODUCTION',
@@ -41,6 +42,16 @@ export interface RoutingStep {
   laborRate: number;
 }
 
+export interface CostEstimation {
+  estimatedMaterialCost?: number;
+  estimatedLaborCost?: number;
+  profitMargin?: number;
+  finalPrice?: number;
+  adjustedBOM?: BOMItem[];
+  adjustedRouting?: RoutingStep[];
+  notes?: string;
+}
+
 export interface Style {
   id: string;
   code: string;
@@ -52,6 +63,15 @@ export interface Style {
   routing: RoutingStep[];
   proposedPrice?: number;
   estimatedCost?: number;
+  quantity?: number;
+  initialPrice?: number;
+  estimatedMaterialCost?: number;
+  estimatedLaborCost?: number;
+  accountingProfitMargin?: number;
+  accountingFinalPrice?: number;
+  adjustedBOM?: BOMItem[];
+  adjustedRouting?: RoutingStep[];
+  accountingNotes?: string;
 }
 
 export interface WorkOrder {

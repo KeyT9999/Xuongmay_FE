@@ -10,8 +10,10 @@ import {
   Play, 
   ArrowRight,
   TrendingUp,
-  Hash
+  Hash,
+  Download
 } from 'lucide-react';
+import { styleService } from '../src/services/style.service';
 
 interface PlanningPageProps {
   styles: Style[];
@@ -25,12 +27,35 @@ const PlanningPage: React.FC<PlanningPageProps> = ({ styles, workOrders, onUpdat
   
   const [showModal, setShowModal] = useState(false);
   const [targetStyle, setTargetStyle] = useState<Style | null>(null);
+  const [isExporting, setIsExporting] = useState(false);
   const [formData, setFormData] = useState({
     qty: 1000,
     line: 'Chuyền A1',
     startDate: new Date().toISOString().split('T')[0],
     endDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
   });
+
+  const handleExportExcel = async () => {
+    const exportAll = confirm('Bạn muốn export tất cả Styles?\n\nOK = Export tất cả\nCancel = Export chỉ Styles đã duyệt');
+    
+    setIsExporting(true);
+    try {
+      await styleService.exportStylesToExcel({
+        exportAll: exportAll,
+        status: exportAll ? undefined : [StyleStatus.COST_APPROVED, StyleStatus.READY_FOR_PLANNING],
+        includeBOM: true,
+        includeRouting: true,
+        includeCostEstimation: true,
+      });
+      
+      alert('Đã xuất file Excel thành công!');
+    } catch (error: any) {
+      console.error('Export error:', error);
+      alert('Có lỗi xảy ra khi xuất Excel: ' + (error.response?.data?.message || error.message));
+    } finally {
+      setIsExporting(false);
+    }
+  };
 
   const handleCreateWO = () => {
     if (!targetStyle) return;
@@ -61,7 +86,17 @@ const PlanningPage: React.FC<PlanningPageProps> = ({ styles, workOrders, onUpdat
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-extrabold text-slate-900 tracking-tight text-indigo-900">Kế Hoạch & Lệnh Sản Xuất</h2>
+          <div className="flex items-center justify-between w-full">
+            <h2 className="text-2xl font-extrabold text-slate-900 tracking-tight text-indigo-900">Kế Hoạch & Lệnh Sản Xuất</h2>
+            <button 
+              onClick={handleExportExcel}
+              disabled={isExporting}
+              className="bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 px-5 py-3 rounded-2xl font-bold text-sm flex items-center space-x-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <Download size={18} />
+              <span>Xuất Excel</span>
+            </button>
+          </div>
           <p className="text-slate-500 text-sm mt-1">Điều phối style đã duyệt giá sang chuyền sản xuất và lập lịch.</p>
         </div>
       </div>

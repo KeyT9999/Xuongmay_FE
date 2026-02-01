@@ -30,6 +30,7 @@ export const ROLE_CONFIG = {
 export const STATUS_UI: Record<StyleStatus, { label: string; color: string; icon: React.ReactNode }> = {
   [StyleStatus.DRAFT]: { label: 'Nháp', color: 'bg-slate-100 text-slate-600', icon: <Clock size={14} /> },
   [StyleStatus.SENT_TO_ACCOUNTING]: { label: 'Chờ Duyệt Giá', color: 'bg-blue-50 text-blue-600 border border-blue-100', icon: <AlertCircle size={14} /> },
+  [StyleStatus.COST_ESTIMATED]: { label: 'Đã Dự Trù', color: 'bg-amber-50 text-amber-600 border border-amber-100', icon: <Calculator size={14} /> },
   [StyleStatus.COST_APPROVED]: { label: 'Đã Duyệt Giá', color: 'bg-emerald-50 text-emerald-600 border border-emerald-100', icon: <CheckCircle2 size={14} /> },
   [StyleStatus.READY_FOR_PLANNING]: { label: 'Sẵn Sàng SX', color: 'bg-sky-100 text-sky-700', icon: <TrendingUp size={14} /> },
   [StyleStatus.IN_PRODUCTION]: { label: 'Đang Sản Xuất', color: 'bg-blue-100 text-blue-800 border border-blue-200', icon: <Factory size={14} /> },
