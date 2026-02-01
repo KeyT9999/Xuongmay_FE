@@ -1,0 +1,7 @@
+{
+  "name": "Quản Lý Xưởng May",
+  "description": "A professional-grade enterprise resource planning system for garment manufacturing, featuring multi-role workflows from technical styling and BOM to accounting, planning, and factory execution.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
