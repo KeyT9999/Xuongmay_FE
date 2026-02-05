@@ -22,7 +22,11 @@ const CreateStyleModal: React.FC<CreateStyleModalProps> = ({
     description: '',
     quantity: undefined,
     initialPrice: undefined,
+    season: '',
+    buyer: '',
   });
+  const [techpackFile, setTechpackFile] = useState<File | null>(null);
+  const [patternFile, setPatternFile] = useState<File | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -75,13 +79,13 @@ const CreateStyleModal: React.FC<CreateStyleModalProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // Validate
     const codeError = validateCode(formData.code);
     const nameError = !formData.name.trim() ? 'Tên sản phẩm không được để trống' : null;
     const quantityError = formData.quantity ? validateQuantity(formData.quantity.toString()) : null;
     const priceError = formData.initialPrice ? validatePrice(formData.initialPrice.toString()) : null;
-    
+
     if (codeError || nameError || quantityError || priceError) {
       setErrors({
         code: codeError || '',
@@ -101,6 +105,9 @@ const CreateStyleModal: React.FC<CreateStyleModalProps> = ({
         description: formData.description?.trim() || '',
         quantity: formData.quantity ? Number(formData.quantity) : undefined,
         initialPrice: formData.initialPrice ? Number(formData.initialPrice) : undefined,
+        season: formData.season?.trim(),
+        buyer: formData.buyer?.trim(),
+        // Note: files would be uploaded separately or handled by backend in real app
       });
 
       // Upload image if provided
@@ -109,7 +116,11 @@ const CreateStyleModal: React.FC<CreateStyleModalProps> = ({
       }
 
       // Reset form
-      setFormData({ code: '', name: '', description: '', quantity: undefined, initialPrice: undefined });
+      setFormData({ code: '', name: '', description: '', quantity: undefined, initialPrice: undefined, season: '', buyer: '' });
+      setImageFile(null);
+      setImagePreview(null);
+      setTechpackFile(null);
+      setPatternFile(null);
       setImageFile(null);
       setImagePreview(null);
       setErrors({});
@@ -131,7 +142,7 @@ const CreateStyleModal: React.FC<CreateStyleModalProps> = ({
   };
 
   const handleClose = () => {
-    setFormData({ code: '', name: '', description: '', quantity: undefined, initialPrice: undefined });
+    setFormData({ code: '', name: '', description: '', quantity: undefined, initialPrice: undefined, season: '', buyer: '' });
     setImageFile(null);
     setImagePreview(null);
     setErrors({});
@@ -206,9 +217,8 @@ const CreateStyleModal: React.FC<CreateStyleModalProps> = ({
               value={formData.code}
               onChange={(e) => handleCodeChange(e.target.value)}
               placeholder="VD: POLO-001"
-              className={`w-full px-4 py-3 bg-slate-50 border-2 rounded-xl focus:outline-none font-bold transition-all ${
-                errors.code ? 'border-rose-300' : 'border-slate-100 focus:border-blue-500'
-              }`}
+              className={`w-full px-4 py-3 bg-slate-50 border-2 rounded-xl focus:outline-none font-bold transition-all ${errors.code ? 'border-rose-300' : 'border-slate-100 focus:border-blue-500'
+                }`}
               disabled={isLoading}
             />
             {errors.code && (
@@ -228,14 +238,42 @@ const CreateStyleModal: React.FC<CreateStyleModalProps> = ({
                 setErrors({ ...errors, name: '' });
               }}
               placeholder="VD: Áo Polo Nam Classic"
-              className={`w-full px-4 py-3 bg-slate-50 border-2 rounded-xl focus:outline-none font-bold transition-all ${
-                errors.name ? 'border-rose-300' : 'border-slate-100 focus:border-blue-500'
-              }`}
+              className={`w-full px-4 py-3 bg-slate-50 border-2 rounded-xl focus:outline-none font-bold transition-all ${errors.name ? 'border-rose-300' : 'border-slate-100 focus:border-blue-500'
+                }`}
               disabled={isLoading}
             />
             {errors.name && (
               <p className="mt-1 text-xs text-rose-500">{errors.name}</p>
             )}
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">
+                Mùa Vụ (Season)
+              </label>
+              <input
+                type="text"
+                value={formData.season || ''}
+                onChange={(e) => setFormData({ ...formData, season: e.target.value })}
+                placeholder="VD: SS2024"
+                className="w-full px-4 py-3 bg-slate-50 border-2 border-slate-100 rounded-xl focus:outline-none font-bold transition-all focus:border-blue-500"
+                disabled={isLoading}
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">
+                Khách Hàng (Buyer)
+              </label>
+              <input
+                type="text"
+                value={formData.buyer || ''}
+                onChange={(e) => setFormData({ ...formData, buyer: e.target.value })}
+                placeholder="VD: GAP, Zara..."
+                className="w-full px-4 py-3 bg-slate-50 border-2 border-slate-100 rounded-xl focus:outline-none font-bold transition-all focus:border-blue-500"
+                disabled={isLoading}
+              />
+            </div>
           </div>
 
           <div>
@@ -269,9 +307,8 @@ const CreateStyleModal: React.FC<CreateStyleModalProps> = ({
                   setErrors({ ...errors, quantity: error || '' });
                 }}
                 placeholder="VD: 1000"
-                className={`w-full px-4 py-3 bg-slate-50 border-2 rounded-xl focus:outline-none font-bold transition-all ${
-                  errors.quantity ? 'border-rose-300' : 'border-slate-100 focus:border-blue-500'
-                }`}
+                className={`w-full px-4 py-3 bg-slate-50 border-2 rounded-xl focus:outline-none font-bold transition-all ${errors.quantity ? 'border-rose-300' : 'border-slate-100 focus:border-blue-500'
+                  }`}
                 disabled={isLoading}
               />
               {errors.quantity && (
@@ -294,9 +331,8 @@ const CreateStyleModal: React.FC<CreateStyleModalProps> = ({
                   setErrors({ ...errors, initialPrice: error || '' });
                 }}
                 placeholder="VD: 125,000"
-                className={`w-full px-4 py-3 bg-slate-50 border-2 rounded-xl focus:outline-none font-bold transition-all ${
-                  errors.initialPrice ? 'border-rose-300' : 'border-slate-100 focus:border-blue-500'
-                }`}
+                className={`w-full px-4 py-3 bg-slate-50 border-2 rounded-xl focus:outline-none font-bold transition-all ${errors.initialPrice ? 'border-rose-300' : 'border-slate-100 focus:border-blue-500'
+                  }`}
                 disabled={isLoading}
               />
               {errors.initialPrice && (

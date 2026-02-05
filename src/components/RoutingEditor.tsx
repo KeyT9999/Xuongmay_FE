@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Plus, Trash2, Edit2, X, Check, ChevronUp, ChevronDown } from 'lucide-react';
 import { Workflow } from 'lucide-react';
-import { Style, RoutingStep } from '../types';
+import { Style, RoutingStep } from '../../types';
 import { styleService } from '../services/style.service';
 
 interface RoutingEditorProps {
@@ -159,9 +159,8 @@ const RoutingEditor: React.FC<RoutingEditorProps> = ({ style, onStyleUpdate }) =
                 setFormData({ ...formData, operation: e.target.value });
                 setErrors({ ...errors, operation: '' });
               }}
-              className={`w-full px-3 py-2 text-xs bg-white border-2 rounded-lg focus:outline-none transition-all ${
-                errors.operation ? 'border-rose-300' : 'border-slate-200 focus:border-blue-500'
-              }`}
+              className={`w-full px-3 py-2 text-xs bg-white border-2 rounded-lg focus:outline-none transition-all ${errors.operation ? 'border-rose-300' : 'border-slate-200 focus:border-blue-500'
+                }`}
               disabled={isLoading}
               placeholder="VD: Cắt vải, May thân..."
             />
@@ -184,9 +183,8 @@ const RoutingEditor: React.FC<RoutingEditorProps> = ({ style, onStyleUpdate }) =
                   setFormData({ ...formData, minutes: e.target.value });
                   setErrors({ ...errors, minutes: '' });
                 }}
-                className={`w-full px-3 py-2 text-xs bg-white border-2 rounded-lg focus:outline-none transition-all ${
-                  errors.minutes ? 'border-rose-300' : 'border-slate-200 focus:border-blue-500'
-                }`}
+                className={`w-full px-3 py-2 text-xs bg-white border-2 rounded-lg focus:outline-none transition-all ${errors.minutes ? 'border-rose-300' : 'border-slate-200 focus:border-blue-500'
+                  }`}
                 disabled={isLoading}
                 placeholder="0.0"
               />
@@ -208,9 +206,8 @@ const RoutingEditor: React.FC<RoutingEditorProps> = ({ style, onStyleUpdate }) =
                   setFormData({ ...formData, laborRate: e.target.value });
                   setErrors({ ...errors, laborRate: '' });
                 }}
-                className={`w-full px-3 py-2 text-xs bg-white border-2 rounded-lg focus:outline-none transition-all ${
-                  errors.laborRate ? 'border-rose-300' : 'border-slate-200 focus:border-blue-500'
-                }`}
+                className={`w-full px-3 py-2 text-xs bg-white border-2 rounded-lg focus:outline-none transition-all ${errors.laborRate ? 'border-rose-300' : 'border-slate-200 focus:border-blue-500'
+                  }`}
                 disabled={isLoading}
                 placeholder="0"
               />

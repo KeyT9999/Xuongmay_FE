@@ -1,5 +1,5 @@
 import apiClient from './api.service';
-import { Style, BOMItem, RoutingStep, StyleStatus } from '../../types';
+import { Style, BOMItem, RoutingStep, StyleStatus, BOMItemType } from '../../types';
 
 export interface CreateStyleData {
   code: string;
@@ -7,6 +7,8 @@ export interface CreateStyleData {
   description?: string;
   quantity?: number;
   initialPrice?: number;
+  season?: string;
+  buyer?: string;
 }
 
 export interface UpdateStyleData {
@@ -18,11 +20,21 @@ export interface AddBOMItemData {
   materialId: string;
   quantity: number;
   wasteRate: number;
+  type?: BOMItemType;
+  variant?: {
+    size?: string;
+    color?: string;
+  };
 }
 
 export interface UpdateBOMItemData {
   quantity?: number;
   wasteRate?: number;
+  type?: BOMItemType;
+  variant?: {
+    size?: string;
+    color?: string;
+  };
 }
 
 export interface AddRoutingStepData {
@@ -167,7 +179,7 @@ export const styleService = {
   async exportStylesToExcel(options: ExportStylesOptions = {}): Promise<void> {
     // Build query params
     const params: any = {};
-    
+
     if (options.exportAll) {
       params.exportAll = 'true';
     } else {
@@ -178,7 +190,7 @@ export const styleService = {
         params.styleIds = options.styleIds.join(',');
       }
     }
-    
+
     if (options.includeBOM !== undefined) {
       params.includeBOM = options.includeBOM.toString();
     }

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Style, Material } from '../types';
+import { Style, Material } from '../../types';
 
 interface PriceBreakdownProps {
   style: Style;

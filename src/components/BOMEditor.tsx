@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Trash2, Edit2, X, Check } from 'lucide-react';
 import { Layers } from 'lucide-react';
-import { Style, Material, BOMItem } from '../types';
+import { Style, Material, BOMItem, BOMItemType } from '../../types';
 import { styleService } from '../services/style.service';
 import { materialService } from '../services/material.service';
 
@@ -18,6 +18,9 @@ const BOMEditor: React.FC<BOMEditorProps> = ({ style, onStyleUpdate }) => {
     materialId: '',
     quantity: '',
     wasteRate: '',
+    type: 'FABRIC_MAIN',
+    variantSize: '',
+    variantColor: '',
   });
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -37,14 +40,14 @@ const BOMEditor: React.FC<BOMEditorProps> = ({ style, onStyleUpdate }) => {
 
   const handleAdd = () => {
     setIsAdding(true);
-    setFormData({ materialId: '', quantity: '', wasteRate: '0' });
+    setFormData({ materialId: '', quantity: '', wasteRate: '0', type: 'FABRIC_MAIN', variantSize: '', variantColor: '' });
     setErrors({});
   };
 
   const handleCancel = () => {
     setIsAdding(false);
     setEditingId(null);
-    setFormData({ materialId: '', quantity: '', wasteRate: '0' });
+    setFormData({ materialId: '', quantity: '', wasteRate: '0', type: 'FABRIC_MAIN', variantSize: '', variantColor: '' });
     setErrors({});
   };
 
@@ -54,6 +57,9 @@ const BOMEditor: React.FC<BOMEditorProps> = ({ style, onStyleUpdate }) => {
       materialId: item.materialId,
       quantity: item.quantity.toString(),
       wasteRate: item.wasteRate.toString(),
+      type: item.type || 'FABRIC_MAIN',
+      variantSize: item.variant?.size || '',
+      variantColor: item.variant?.color || '',
     });
     setErrors({});
   };
@@ -83,13 +89,18 @@ const BOMEditor: React.FC<BOMEditorProps> = ({ style, onStyleUpdate }) => {
         updatedStyle = await styleService.updateBOMItem(style.id, editingId, {
           quantity: parseFloat(formData.quantity),
           wasteRate: parseFloat(formData.wasteRate),
-        });
+          // Note: Backend service needs update to support type and variant in updateBOMItem
+          type: formData.type as BOMItemType,
+          variant: { size: formData.variantSize, color: formData.variantColor }
+        } as any);
       } else {
         updatedStyle = await styleService.addBOMItem(style.id, {
           materialId: formData.materialId,
           quantity: parseFloat(formData.quantity),
           wasteRate: parseFloat(formData.wasteRate),
-        });
+          type: formData.type as BOMItemType,
+          variant: { size: formData.variantSize, color: formData.variantColor }
+        } as any);
       }
       onStyleUpdate(updatedStyle);
       handleCancel();
@@ -159,9 +170,8 @@ const BOMEditor: React.FC<BOMEditorProps> = ({ style, onStyleUpdate }) => {
                 setFormData({ ...formData, materialId: e.target.value });
                 setErrors({ ...errors, materialId: '' });
               }}
-              className={`w-full px-3 py-2 text-xs bg-white border-2 rounded-lg focus:outline-none transition-all ${
-                errors.materialId ? 'border-rose-300' : 'border-slate-200 focus:border-blue-500'
-              }`}
+              className={`w-full px-3 py-2 text-xs bg-white border-2 rounded-lg focus:outline-none transition-all ${errors.materialId ? 'border-rose-300' : 'border-slate-200 focus:border-blue-500'
+                }`}
               disabled={isLoading || !!editingId}
             >
               <option value="">-- Chọn vật tư --</option>
@@ -174,6 +184,53 @@ const BOMEditor: React.FC<BOMEditorProps> = ({ style, onStyleUpdate }) => {
             {errors.materialId && (
               <p className="mt-1 text-[10px] text-rose-500">{errors.materialId}</p>
             )}
+          </div>
+
+          <div>
+            <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">
+              Loại Vật Tư
+            </label>
+            <select
+              value={formData.type}
+              onChange={(e) => setFormData({ ...formData, type: e.target.value })}
+              className="w-full px-3 py-2 text-xs bg-white border-2 border-slate-200 rounded-lg focus:outline-none focus:border-blue-500 transition-all font-bold"
+              disabled={isLoading}
+            >
+              <option value="FABRIC_MAIN">Vải Chính (Main Fabric)</option>
+              <option value="FABRIC_LINING">Vải Lót (Lining)</option>
+              <option value="ACCESSORY_TRIM">Phụ Liệu May (Trim)</option>
+              <option value="ACCESSORY_PACKING">Phụ Liệu Đóng Gói</option>
+              <option value="OTHER">Khác</option>
+            </select>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">
+                Màu (Variant)
+              </label>
+              <input
+                type="text"
+                value={formData.variantColor}
+                onChange={(e) => setFormData({ ...formData, variantColor: e.target.value })}
+                placeholder="VD: Xanh navy..."
+                className="w-full px-3 py-2 text-xs bg-white border-2 border-slate-200 rounded-lg focus:outline-none focus:border-blue-500 transition-all"
+                disabled={isLoading}
+              />
+            </div>
+            <div>
+              <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">
+                Size (Variant)
+              </label>
+              <input
+                type="text"
+                value={formData.variantSize}
+                onChange={(e) => setFormData({ ...formData, variantSize: e.target.value })}
+                placeholder="VD: XL, Free size..."
+                className="w-full px-3 py-2 text-xs bg-white border-2 border-slate-200 rounded-lg focus:outline-none focus:border-blue-500 transition-all"
+                disabled={isLoading}
+              />
+            </div>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
@@ -190,9 +247,8 @@ const BOMEditor: React.FC<BOMEditorProps> = ({ style, onStyleUpdate }) => {
                   setFormData({ ...formData, quantity: e.target.value });
                   setErrors({ ...errors, quantity: '' });
                 }}
-                className={`w-full px-3 py-2 text-xs bg-white border-2 rounded-lg focus:outline-none transition-all ${
-                  errors.quantity ? 'border-rose-300' : 'border-slate-200 focus:border-blue-500'
-                }`}
+                className={`w-full px-3 py-2 text-xs bg-white border-2 rounded-lg focus:outline-none transition-all ${errors.quantity ? 'border-rose-300' : 'border-slate-200 focus:border-blue-500'
+                  }`}
                 disabled={isLoading}
                 placeholder="0.00"
               />
@@ -214,9 +270,8 @@ const BOMEditor: React.FC<BOMEditorProps> = ({ style, onStyleUpdate }) => {
                   setFormData({ ...formData, wasteRate: e.target.value });
                   setErrors({ ...errors, wasteRate: '' });
                 }}
-                className={`w-full px-3 py-2 text-xs bg-white border-2 rounded-lg focus:outline-none transition-all ${
-                  errors.wasteRate ? 'border-rose-300' : 'border-slate-200 focus:border-blue-500'
-                }`}
+                className={`w-full px-3 py-2 text-xs bg-white border-2 rounded-lg focus:outline-none transition-all ${errors.wasteRate ? 'border-rose-300' : 'border-slate-200 focus:border-blue-500'
+                  }`}
                 disabled={isLoading}
                 placeholder="0"
               />

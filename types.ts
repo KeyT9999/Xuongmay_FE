@@ -1,4 +1,5 @@
 
+// --- Enums ---
 export enum UserRole {
   TECH = 'TECH',
   ACCOUNTANT = 'ACCOUNTANT',
@@ -11,81 +12,15 @@ export enum UserRole {
 
 export enum StyleStatus {
   DRAFT = 'DRAFT',
-  SENT_TO_ACCOUNTING = 'SENT_TO_ACCOUNTING',
-  COST_ESTIMATED = 'COST_ESTIMATED',
-  COST_APPROVED = 'COST_APPROVED',
-  READY_FOR_PLANNING = 'READY_FOR_PLANNING',
+  PENDING = 'PENDING',
+  APPROVED = 'APPROVED',
+  REJECTED = 'REJECTED',
   IN_PRODUCTION = 'IN_PRODUCTION',
-  DONE = 'DONE',
+  COMPLETED = 'COMPLETED',
   CANCELLED = 'CANCELLED'
 }
 
-export interface Material {
-  id: string;
-  name: string;
-  unit: string;
-  stock: number;
-  costPerUnit: number;
-}
-
-export interface BOMItem {
-  id: string;
-  materialId: string;
-  quantity: number;
-  wasteRate: number;
-}
-
-export interface RoutingStep {
-  id: string;
-  operation: string;
-  minutes: number;
-  laborRate: number;
-}
-
-export interface CostEstimation {
-  estimatedMaterialCost?: number;
-  estimatedLaborCost?: number;
-  profitMargin?: number;
-  finalPrice?: number;
-  adjustedBOM?: BOMItem[];
-  adjustedRouting?: RoutingStep[];
-  notes?: string;
-}
-
-export interface Style {
-  id: string;
-  code: string;
-  name: string;
-  image?: string;
-  description: string;
-  status: StyleStatus;
-  bom: BOMItem[];
-  routing: RoutingStep[];
-  proposedPrice?: number;
-  estimatedCost?: number;
-  quantity?: number;
-  initialPrice?: number;
-  estimatedMaterialCost?: number;
-  estimatedLaborCost?: number;
-  accountingProfitMargin?: number;
-  accountingFinalPrice?: number;
-  adjustedBOM?: BOMItem[];
-  adjustedRouting?: RoutingStep[];
-  accountingNotes?: string;
-}
-
-export interface WorkOrder {
-  id: string;
-  styleId: string;
-  quantity: number;
-  lineNo: string;
-  startDate: string;
-  endDate: string;
-  status: StyleStatus;
-  assignedTeam: string;
-  actualOutput: number;
-  defectCount: number;
-}
+// --- Entities ---
 
 export interface User {
   id: string;
@@ -94,7 +29,81 @@ export interface User {
   email: string;
   role: UserRole;
   avatar: string;
+  factoryId?: string; // If user is bound to a specific factory
   isActive?: boolean;
   createdAt?: Date;
   updatedAt?: Date;
+}
+
+export interface Material {
+  id: string;
+  name: string;
+  code: string;
+  type: string;
+  unit: string;
+  costPerUnit: number;
+  supplier?: string;
+  imageUrl?: string;
+  description?: string;
+  inventory?: number;
+  minInventory?: number;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export type BOMItemType = 'FABRIC_MAIN' | 'FABRIC_LINING' | 'ACCESSORY_TRIM' | 'ACCESSORY_PACKING' | 'OTHER';
+
+export interface BOMItem {
+  id: string;
+  materialId: string;
+  quantity: number;
+  wasteRate: number; // Percentage
+  type?: BOMItemType;
+  variant?: {
+    size?: string;
+    color?: string;
+  };
+  material?: Material;
+}
+
+export interface RoutingStep {
+  id: string;
+  operation: string;
+  minutes: number;
+  laborRate: number;
+  description?: string;
+}
+
+export interface CostEstimation {
+  id?: string;
+  estimatedMaterialCost?: number;
+  estimatedLaborCost?: number;
+  profitMargin?: number;
+  finalPrice?: number;
+  notes?: string;
+  status?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface Style {
+  id: string;
+  code: string;
+  name: string;
+  description?: string;
+  quantity?: number;
+  initialPrice?: number;
+  proposedPrice: number;
+  season?: string;
+  buyer?: string;
+  status: StyleStatus;
+  imageUrl?: string;
+
+  // Relations
+  bom: BOMItem[];
+  routing: RoutingStep[];
+  costEstimation?: CostEstimation;
+
+  createdAt?: string;
+  updatedAt?: string;
 }
